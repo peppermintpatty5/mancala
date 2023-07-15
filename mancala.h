@@ -16,9 +16,10 @@ struct mancala
 };
 
 /**
- * Initialize a mancala game to the starting state (4 stones in each cup).
+ * Create and initialize a mancala game to the usual starting state of 4 stones
+ * in each cup.
  */
-extern void mancala_init(struct mancala *game);
+extern struct mancala *mancala_new(void);
 
 /**
  * Perform a move for the player whose turn it is.
@@ -32,6 +33,9 @@ extern int mancala_do_turn(struct mancala *game, int index);
  */
 extern int mancala_game_over(struct mancala *game);
 
+/**
+ * Print a representation of the game to the output stream.
+ */
 extern void mancala_print(struct mancala *game, FILE *out);
 
 #endif

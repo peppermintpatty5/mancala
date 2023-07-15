@@ -5,23 +5,21 @@
 
 int main(void)
 {
-    struct mancala game;
+    struct mancala *game = mancala_new();
 
-    mancala_init(&game);
-
-    while (!mancala_game_over(&game))
+    while (!mancala_game_over(game))
     {
         int i;
 
-        mancala_print(&game, stdout);
-        printf("Player %i's turn: ", game.turn + 1);
+        mancala_print(game, stdout);
+        printf("Player %i's turn: ", game->turn + 1);
 
         do
         {
             scanf("%i", &i);
         } while (i < 0 || i >= NUM_CUPS);
 
-        mancala_do_turn(&game, i);
+        mancala_do_turn(game, i);
     }
 
     return EXIT_SUCCESS;

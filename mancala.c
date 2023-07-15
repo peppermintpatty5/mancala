@@ -1,13 +1,20 @@
 #include "mancala.h"
 
-void mancala_init(struct mancala *game)
+#include <stdlib.h>
+
+struct mancala *mancala_new(void)
 {
     static const struct mancala starting_state = {
         0,
         {{4, 4, 4, 4, 4, 4}, 0},
         {{4, 4, 4, 4, 4, 4}, 0}};
 
-    *game = starting_state;
+    struct mancala *game = malloc(sizeof(*game));
+
+    if (game != NULL)
+        *game = starting_state;
+
+    return game;
 }
 
 int mancala_do_turn(struct mancala *game, int index)
