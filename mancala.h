@@ -7,9 +7,12 @@
 
 struct mancala
 {
-    int turn;                         /* Which player's turn it is */
-    unsigned short cups[2][NUM_CUPS]; /* Rows of cups for both players */
-    unsigned short scores[2];         /* Each player's mancala */
+    int turn;
+    struct player
+    {
+        unsigned short cups[NUM_CUPS];
+        unsigned short mancala;
+    } p1, p2;
 };
 
 /**
