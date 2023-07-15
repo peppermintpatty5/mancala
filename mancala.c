@@ -3,7 +3,7 @@
 void mancala_init(struct mancala *game)
 {
     static const struct mancala starting_state = {
-        TURN_PLAYER_1,
+        0,
         {{4, 4, 4, 4, 4, 4},
          {4, 4, 4, 4, 4, 4}},
         {0, 0}};
@@ -13,68 +13,83 @@ void mancala_init(struct mancala *game)
 
 int mancala_do_turn(struct mancala *game, int index)
 {
-    if (game->state != GAME_OVER)
+
+    unsigned short x,
+        *near = game->cups[game->turn],
+        *far = game->cups[!game->turn],
+        *score = &game->scores[game->turn];
+
+    if (index >= 0 && index < NUM_CUPS && (x = near[index]) > 0)
     {
-        unsigned short x,
-            *near = game->cups[game->state],
-            *far = game->cups[!game->state],
-            *score = &game->scores[game->state];
+        int i;
+        unsigned short q = x / (NUM_CUPS * 2 + 1),
+                       r = x % (NUM_CUPS * 2 + 1);
 
-        if (index >= 0 && index < NUM_CUPS && (x = near[index]) > 0)
+        /* distribute stones to cups */
+        near[index] = 0;
+
+        for (i = 0; i < NUM_CUPS; i++)
         {
-            int i;
-            unsigned short q = x / (NUM_CUPS * 2 + 1),
-                           r = x % (NUM_CUPS * 2 + 1);
+            int dist = i > index
+                           ? i - index - 1
+                           : i - index + NUM_CUPS * 2;
 
-            /* distribute stones to cups */
-            near[index] = 0;
+            near[i] += q + (dist < r);
+        }
 
-            for (i = 0; i < NUM_CUPS; i++)
+        for (i = 0; i < NUM_CUPS; i++)
+            far[i] += q + (i - index + NUM_CUPS < r);
+
+        *score += q + ((NUM_CUPS - index - 1) < r);
+
+        /* opposite cup stealing */
+        if (index + r >= 0 && index + r < NUM_CUPS)
+        {
+            unsigned short
+                *last_cup = &near[index + r],
+                *opposite = &far[NUM_CUPS - (index + r) - 1];
+
+            if (*last_cup == 1 && *opposite > 0)
             {
-                int dist = i > index
-                               ? i - index - 1
-                               : i - index + NUM_CUPS * 2;
-
-                near[i] += q + (dist < r);
-            }
-
-            for (i = 0; i < NUM_CUPS; i++)
-                far[i] += q + (i - index + NUM_CUPS < r);
-
-            *score += q + ((NUM_CUPS - index - 1) < r);
-
-            /* opposite cup stealing */
-            if (index + r >= 0 && index + r < NUM_CUPS)
-            {
-                unsigned short
-                    *last_cup = &near[index + r],
-                    *opposite = &far[NUM_CUPS - (index + r) - 1];
-
-                if (*last_cup == 1 && *opposite > 0)
-                {
-                    *score += 1 + *opposite;
-                    *last_cup = *opposite = 0;
-                }
-            }
-
-            /* go again if last stone dropped in mancala */
-            if (index + r != NUM_CUPS)
-            {
-                game->state = game->state == TURN_PLAYER_1
-                                  ? TURN_PLAYER_2
-                                  : TURN_PLAYER_1;
+                *score += 1 + *opposite;
+                *last_cup = *opposite = 0;
             }
         }
+
+        /* go again if last stone dropped in mancala */
+        if (index + r != NUM_CUPS)
+        {
+            game->turn = !game->turn;
+        }
+
+        return 1;
     }
 
     return 0;
 }
 
+static int all_zero(unsigned short cups[])
+{
+    int i = 0;
+
+    for (i = 0; i < NUM_CUPS; i++)
+    {
+        if (cups[i] != 0)
+            return 0;
+    }
+    return 1;
+}
+
+int mancala_game_over(struct mancala *game)
+{
+    return all_zero(game->cups[0]) || all_zero(game->cups[1]);
+}
+
 void mancala_print(struct mancala *game, FILE *out)
 {
     int i;
-    unsigned short *near = game->cups[game->state],
-                   *far = game->cups[!game->state];
+    unsigned short *near = game->cups[game->turn],
+                   *far = game->cups[!game->turn];
 
     fputs("+----+", out);
     for (i = 0; i < NUM_CUPS; i++)
@@ -86,10 +101,10 @@ void mancala_print(struct mancala *game, FILE *out)
         fprintf(out, " %2hi |", far[NUM_CUPS - i - 1]);
     fputs("    |\n", out);
 
-    fprintf(out, "| %2hi |", game->scores[!game->state]);
+    fprintf(out, "| %2hi |", game->scores[!game->turn]);
     for (i = 0; i < NUM_CUPS; i++)
         fprintf(out, "----+");
-    fprintf(out, " %2hi |\n", game->scores[game->state]);
+    fprintf(out, " %2hi |\n", game->scores[game->turn]);
 
     fputs("|    |", out);
     for (i = 0; i < NUM_CUPS; i++)
