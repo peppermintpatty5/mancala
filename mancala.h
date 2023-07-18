@@ -24,18 +24,18 @@ extern struct mancala *mancala_new(void);
 /**
  * Perform a move for the player whose turn it is.
  */
-extern int mancala_do_turn(struct mancala *game, int index);
+extern struct mancala *mancala_do_turn(struct mancala const *game, int index);
 
 /**
  * Return non-zero if the given game is over.
  *
  * A game is over if either player has no more stones in their row of cups.
  */
-extern int mancala_game_over(struct mancala *game);
+extern int mancala_game_over(struct mancala const *game);
 
 /**
  * Print a representation of the game to the output stream.
  */
-extern void mancala_print(struct mancala *game, FILE *out);
+extern void mancala_print(struct mancala const *game, FILE *out);
 
 #endif

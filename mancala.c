@@ -17,7 +17,7 @@ struct mancala *mancala_new(void)
     return game;
 }
 
-int mancala_do_turn(struct mancala *game, int index)
+static int mancala_do_turn_in_place(struct mancala *game, int index)
 {
     unsigned short x;
     struct player *near = game->turn == 0 ? &game->p1 : &game->p2,
@@ -72,28 +72,48 @@ int mancala_do_turn(struct mancala *game, int index)
     return 0;
 }
 
-static int all_zero(unsigned short cups[])
+struct mancala *mancala_do_turn(struct mancala const *game, int index)
+{
+    struct player const *near = game->turn == 0 ? &game->p1 : &game->p2;
+
+    if (index >= 0 && index < NUM_CUPS && near->cups[index] > 0)
+    {
+        struct mancala *copy = malloc(sizeof(*copy));
+
+        if (copy != NULL)
+        {
+            *copy = *game;
+            mancala_do_turn_in_place(copy, index);
+        }
+
+        return copy;
+    }
+    else
+        return NULL;
+}
+
+static int all_cups_empty(struct player const *player)
 {
     int i = 0;
 
     for (i = 0; i < NUM_CUPS; i++)
     {
-        if (cups[i] != 0)
+        if (player->cups[i] != 0)
             return 0;
     }
     return 1;
 }
 
-int mancala_game_over(struct mancala *game)
+int mancala_game_over(struct mancala const *game)
 {
-    return all_zero(game->p1.cups) || all_zero(game->p2.cups);
+    return all_cups_empty(&game->p1) || all_cups_empty(&game->p2);
 }
 
-void mancala_print(struct mancala *game, FILE *out)
+void mancala_print(struct mancala const *game, FILE *out)
 {
     int i;
-    struct player *near = game->turn == 0 ? &game->p1 : &game->p2,
-                  *far = game->turn == 0 ? &game->p2 : &game->p1;
+    struct player const *near = game->turn == 0 ? &game->p1 : &game->p2,
+                        *far = game->turn == 0 ? &game->p2 : &game->p1;
 
     fputs("+----+", out);
     for (i = 0; i < NUM_CUPS; i++)

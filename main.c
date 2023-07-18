@@ -10,6 +10,7 @@ int main(void)
     while (!mancala_game_over(game))
     {
         int i;
+        struct mancala *next;
 
         mancala_print(game, stdout);
         printf("Player %i's turn: ", game->turn + 1);
@@ -17,9 +18,10 @@ int main(void)
         do
         {
             scanf("%i", &i);
-        } while (i < 0 || i >= NUM_CUPS);
+        } while ((next = mancala_do_turn(game, i - 1)) == NULL);
 
-        mancala_do_turn(game, i);
+        free(game);
+        game = next;
     }
 
     return EXIT_SUCCESS;
