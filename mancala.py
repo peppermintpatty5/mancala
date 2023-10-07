@@ -5,6 +5,10 @@ from typing import NamedTuple
 
 
 class Mancala(NamedTuple):
+    """
+    Represents the state of a mancala game.
+    """
+
     cups: tuple[tuple[int, int], ...]
     ends: tuple[int, int]
     p1_turn: bool
@@ -47,12 +51,17 @@ class Mancala(NamedTuple):
         return (c for _, c in reversed(self.cups))
 
     def move(self, i_pick: int) -> "Mancala | None":
+        """
+        Performs a move for the player whose turn it is. `i_pick` is the index
+        of the cup on the player's side to pick from and shall be in the range
+        [0, n).
+        """
         n = len(self.cups)
         x, _ = self.cups[i_pick]
 
         if x > 0:
+            # distribute the stones around the board in a cycle
             q, r = divmod(x, 2 * n + 1)
-
             cycle = [
                 q
                 + (m if i != i_pick else 0)
