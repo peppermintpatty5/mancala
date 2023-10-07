@@ -50,11 +50,20 @@ class Mancala(NamedTuple):
         """
         return (c for _, c in reversed(self.cups))
 
+    def game_over(self) -> bool:
+        """
+        A game is over if either player has no stones in any of their cups.
+        """
+        return all(c <= 0 for c, _ in self.cups) or all(c <= 0 for _, c in self.cups)
+
     def move(self, i_pick: int) -> "Mancala | None":
         """
         Performs a move for the player whose turn it is. `i_pick` is the index
         of the cup on the player's side to pick from and shall be in the range
         [0, n).
+
+        If the selected cup is empty, then that move is not allowed an `None` is
+        returned.
         """
         n = len(self.cups)
         x, _ = self.cups[i_pick]
@@ -78,7 +87,7 @@ class Mancala(NamedTuple):
 
             # opposite cup stealing
             i_last = (i_pick + r) % (2 * n + 1)
-            if i_last < n and near[i_last] == 1:
+            if i_last < n and near[i_last] == 1 and far_reversed[i_last] >= 0:
                 e0 += far_reversed[i_last] + 1
                 near[i_last] = far_reversed[i_last] = 0
 
@@ -101,7 +110,7 @@ class Mancala(NamedTuple):
 if __name__ == "__main__":
     m = Mancala.start()
 
-    while True:
+    while not m.game_over():
         print(m)
         p = 1 if m.p1_turn else 2
         i = int(input(f"P{p}> "))
