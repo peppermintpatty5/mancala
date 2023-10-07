@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
-from sys import argv
+import itertools
+import sys
 from typing import NamedTuple
 
 
@@ -32,29 +33,38 @@ class Mancala(NamedTuple):
         return cls(tuple((4, 4) for _ in range(6)), (0, 0))
 
     def _near(self):
+        """
+        Returns a generator over the cups on the near side of the board, in the
+        order from the first player's perspective.
+        """
         return (c for c, _ in self.cups)
 
     def _far(self):
+        """
+        Returns a generator over the cups on the far side of the board, in the
+        order from the second player's perspective.
+        """
         return (c for _, c in reversed(self.cups))
 
-    def move(self, index: int) -> "Mancala | None":
+    def move(self, i_pick: int) -> "Mancala | None":
         n = len(self.cups)
 
-        if 0 <= index < n:
-            x, _ = self.cups[index]
+        if 0 <= i_pick < n:
+            x, _ = self.cups[i_pick]
             q, r = divmod(x, 2 * n + 1)
 
-            near = tuple(
+            cycle = [
                 q
-                + (c if i != index else 0)
-                + (1 if (i - index - 1) % (2 * n + 1) < r else 0)
-                for i, c in enumerate(self._near())
-            )
-            far = tuple(
-                q + c + (1 if i - index + n < r else 0)
-                for i, c in enumerate(self._far())
-            )
-            e0 = q + self.ends[0] + (1 if index + r >= n else 0)
+                + (m if i != i_pick else 0)
+                + (1 if (i - (i_pick + 1)) % (2 * n + 1) < r else 0)
+                for i, m in enumerate(
+                    itertools.chain(self._near(), (self.ends[0],), self._far())
+                )
+            ]
+
+            near = cycle[:n]
+            far = cycle[n + 1 :]
+            e0 = cycle[n]
             e1 = self.ends[1]
 
             return Mancala(tuple(zip(near, reversed(far))), (e0, e1))
@@ -62,7 +72,7 @@ class Mancala(NamedTuple):
 
 if __name__ == "__main__":
     m = Mancala.start()
-    for arg in argv[1:]:
+    for arg in sys.argv[1:]:
         next = m.move(int(arg))
         if next is None:
             break
