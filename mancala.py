@@ -87,7 +87,7 @@ class Mancala(NamedTuple):
 
             # opposite cup stealing
             i_last = (i_pick + r) % (2 * n + 1)
-            if i_last < n and near[i_last] == 1 and far_reversed[i_last] >= 0:
+            if i_last < n and near[i_last] == 1 and far_reversed[i_last] > 0:
                 e0 += far_reversed[i_last] + 1
                 near[i_last] = far_reversed[i_last] = 0
 
