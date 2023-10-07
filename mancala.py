@@ -1,13 +1,13 @@
 #!/usr/bin/env python3
 
 import itertools
-import sys
 from typing import NamedTuple
 
 
 class Mancala(NamedTuple):
     cups: tuple[tuple[int, int], ...]
     ends: tuple[int, int]
+    p1_turn: bool
 
     def __str__(self) -> str:
         n = len(self.cups)
@@ -30,7 +30,7 @@ class Mancala(NamedTuple):
         Returns the starting state for a Mancala game, which is 6 pairs of cups
         with 4 stones in each.
         """
-        return cls(tuple((4, 4) for _ in range(6)), (0, 0))
+        return cls(tuple((4, 4) for _ in range(6)), (0, 0), True)
 
     def _near(self):
         """
@@ -48,9 +48,9 @@ class Mancala(NamedTuple):
 
     def move(self, i_pick: int) -> "Mancala | None":
         n = len(self.cups)
+        x, _ = self.cups[i_pick]
 
-        if 0 <= i_pick < n:
-            x, _ = self.cups[i_pick]
+        if x > 0:
             q, r = divmod(x, 2 * n + 1)
 
             cycle = [
@@ -73,14 +73,32 @@ class Mancala(NamedTuple):
                 e0 += far_reversed[i_last] + 1
                 near[i_last] = far_reversed[i_last] = 0
 
-            return Mancala(tuple(zip(near, far_reversed)), (e0, e1))
+            # player goes again if last stone dropped in mancala
+            return (
+                Mancala(
+                    cups=tuple(zip(near, far_reversed)),
+                    ends=(e0, e1),
+                    p1_turn=self.p1_turn,
+                )
+                if i_last == n
+                else Mancala(
+                    cups=tuple(zip(reversed(far_reversed), reversed(near))),
+                    ends=(e1, e0),
+                    p1_turn=not self.p1_turn,
+                )
+            )
 
 
 if __name__ == "__main__":
     m = Mancala.start()
-    for arg in sys.argv[1:]:
-        next = m.move(int(arg))
-        if next is None:
-            break
-        m = next
+
+    while True:
         print(m)
+        p = 1 if m.p1_turn else 2
+        i = int(input(f"P{p}> "))
+        next = m.move(i - 1)
+
+        if next is not None:
+            m = next
+        else:
+            print("Invalid move")
