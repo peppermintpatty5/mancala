@@ -63,11 +63,17 @@ class Mancala(NamedTuple):
             ]
 
             near = cycle[:n]
-            far = cycle[n + 1 :]
+            far_reversed = cycle[:n:-1]
             e0 = cycle[n]
             e1 = self.ends[1]
 
-            return Mancala(tuple(zip(near, reversed(far))), (e0, e1))
+            # opposite cup stealing
+            i_last = (i_pick + r) % (2 * n + 1)
+            if i_last < n and near[i_last] == 1:
+                e0 += far_reversed[i_last] + 1
+                near[i_last] = far_reversed[i_last] = 0
+
+            return Mancala(tuple(zip(near, far_reversed)), (e0, e1))
 
 
 if __name__ == "__main__":
